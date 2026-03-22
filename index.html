@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReqBench — API Testing Workbench</title>
+    <meta name="description"
+        content="A full-featured API testing tool built with vanilla HTML, CSS, and JavaScript. Send HTTP requests, manage collections, chain requests, and generate code.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+    <header class="topbar">
+        <div class="topbar__brand">
+            <div class="topbar__logo">
+                <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                    <rect width="28" height="28" rx="6" fill="url(#logoGrad)" />
+                    <path d="M8 10L14 7L20 10V18L14 21L8 18V10Z" stroke="white" stroke-width="1.5" fill="none" />
+                    <path d="M14 7V21" stroke="white" stroke-width="1.2" opacity="0.5" />
+                    <path d="M8 10L20 18" stroke="white" stroke-width="1.2" opacity="0.3" />
+                    <path d="M20 10L8 18" stroke="white" stroke-width="1.2" opacity="0.3" />
+                    <defs>
+                        <linearGradient id="logoGrad" x1="0" y1="0" x2="28" y2="28">
+                            <stop stop-color="#7c5cfc" />
+                            <stop offset="1" stop-color="#4facfe" />
+                        </linearGradient>
+                    </defs>
+                </svg>
+            </div>
+            <span class="topbar__name">ReqBench</span>
+        </div>
+
+        <div class="topbar__center">
+            <!-- Request Tabs -->
+            <div class="request-tabs" id="requestTabs">
+                <div class="request-tab active" data-tab-id="default">
+                    <span class="request-tab__method badge badge--get">GET</span>
+                    <span class="request-tab__name">Untitled Request</span>
+                    <button class="request-tab__close" title="Close tab">&times;</button>
+                </div>
+                <button class="request-tabs__add" id="btnNewTab" title="New Request (Ctrl+N)">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                        <path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="topbar__actions">
+            <div class="env-selector">
+                <label for="envDropdown" class="env-selector__label">Environment:</label>
+                <select id="envDropdown" class="env-selector__select">
+                    <option value="">No Environment</option>
+                </select>
+                <button class="btn btn--icon" id="btnManageEnvs" title="Manage Environments">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path
+                            d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41"
+                            stroke="currentColor" stroke-width="1.3" stroke-linecap="round" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="app-layout">
+
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar__tabs">
+                <button class="sidebar__tab active" data-panel="collections">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M2 3h12M2 8h12M2 13h8" stroke="currentColor" stroke-width="1.5"
+                            stroke-linecap="round" />
+                    </svg>
+                    Collections
+                </button>
+                <button class="sidebar__tab" data-panel="history">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.3" />
+                        <path d="M8 5v3l2 2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" />
+                    </svg>
+                    History
+                </button>
+            </div>
+            <div class="sidebar__panel active" id="panelCollections">
+                <div class="sidebar__panel-header">
+                    <span>Collections</span>
+                    <div class="sidebar__panel-actions">
+                        <button class="btn btn--icon btn--sm" id="btnImport" title="Import Collection">
+                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                                <path d="M7 1v9M3 7l4 4 4-4M2 12h10" stroke="currentColor" stroke-width="1.3"
+                                    stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        </button>
+                        <button class="btn btn--icon btn--sm" id="btnNewCollection" title="New Collection">
+                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                                <path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="1.5"
+                                    stroke-linecap="round" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="sidebar__panel-body" id="collectionsTree">
+                    <div class="empty-state">
+                        <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+                            <rect x="6" y="8" width="28" height="24" rx="3" stroke="currentColor" stroke-width="1.5" />
+                            <path d="M6 14h28" stroke="currentColor" stroke-width="1.2" />
+                            <path d="M12 8V5h8v3" stroke="currentColor" stroke-width="1.2" />
+                        </svg>
+                        <p>No collections yet</p>
+                        <button class="btn btn--sm btn--primary" id="btnCreateFirstCollection">Create
+                            Collection</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar__panel" id="panelHistory">
+                <div class="sidebar__panel-header">
+                    <span>History</span>
+                    <button class="btn btn--icon btn--sm" id="btnClearHistory" title="Clear History">
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                            <path
+                                d="M2 4h10M5 4V3a1 1 0 011-1h2a1 1 0 011 1v1M9 6v5M5 6v5M3 4l.5 7.5a1.5 1.5 0 001.5 1.5h4a1.5 1.5 0 001.5-1.5L11 4"
+                                stroke="currentColor" stroke-width="1.2" stroke-linecap="round"
+                                stroke-linejoin="round" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="sidebar__panel-body" id="historyList">
+                    <div class="empty-state">
+                        <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+                            <circle cx="20" cy="20" r="14" stroke="currentColor" stroke-width="1.5" />
+                            <path d="M20 10v10l6 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                        </svg>
+                        <p>No history yet</p>
+                        <span class="empty-state__sub">Send a request to start logging</span>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="sidebar__resize" id="sidebarResize"></div>
+        </aside>
+
+        <!-- ===== MAIN CONTENT ===== -->
+        <main class="main-content">
+
+            <!-- Request Builder + Response Viewer Split -->
+            <div class="split-pane" id="splitPane">
+
+                <!-- ===== REQUEST PANEL ===== -->
+                <div class="panel panel--request">
+                    <!-- URL Bar -->
+                    <div class="url-bar">
+                        <select class="url-bar__method" id="httpMethod">
+                            <option value="GET">GET</option>
+                            <option value="POST">POST</option>
+                            <option value="PUT">PUT</option>
+                            <option value="PATCH">PATCH</option>
+                            <option value="DELETE">DELETE</option>
+                            <option value="HEAD">HEAD</option>
+                            <option value="OPTIONS">OPTIONS</option>
+                        </select>
+                        <input type="text" class="url-bar__input" id="urlInput"
+                            placeholder="Enter request URL or paste a curl command" spellcheck="false"
+                            autocomplete="off">
+                        <button class="url-bar__send" id="btnSend" title="Send Request (Ctrl+Enter)">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                <path d="M2 2l12 6-12 6V9l8-1-8-1V2z" fill="currentColor" />
+                            </svg>
+                            <span>Send</span>
+                        </button>
+                        <button class="url-bar__save" id="btnSaveRequest" title="Save Request (Ctrl+S)">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                <path d="M12 14H4a1 1 0 01-1-1V3a1 1 0 011-1h6l3 3v8a1 1 0 01-1 1z"
+                                    stroke="currentColor" stroke-width="1.3" />
+                                <path d="M5 2v4h5V2" stroke="currentColor" stroke-width="1.2" />
+                                <path d="M5 9h6M5 11h4" stroke="currentColor" stroke-width="1.2"
+                                    stroke-linecap="round" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Request Tabs -->
+                    <div class="config-tabs">
+                        <button class="config-tab active" data-config="params">Params</button>
+                        <button class="config-tab" data-config="headers">Headers</button>
+                        <button class="config-tab" data-config="body">Body</button>
+                        <button class="config-tab" data-config="auth">Auth</button>
+                        <button class="config-tab" data-config="chain">Chain</button>
+                    </div>
+
+                    <!-- Params Config -->
+                    <div class="config-panel active" id="configParams">
+                        <div class="kv-editor" id="paramsEditor">
+                            <div class="kv-editor__header">
+                                <span>Query Parameters</span>
+                                <button class="btn btn--sm btn--ghost" id="btnAddParam">+ Add Param</button>
+                            </div>
+                            <div class="kv-editor__rows" id="paramsRows">
+                                <div class="kv-row" data-row-id="p0">
+                                    <input type="checkbox" class="kv-row__toggle" checked>
+                                    <input type="text" class="kv-row__key" placeholder="Key" spellcheck="false">
+                                    <input type="text" class="kv-row__value" placeholder="Value" spellcheck="false">
+                                    <button class="kv-row__delete" title="Remove">&times;</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Headers Config -->
+                    <div class="config-panel" id="configHeaders">
+                        <div class="kv-editor" id="headersEditor">
+                            <div class="kv-editor__header">
+                                <span>Request Headers</span>
+                                <button class="btn btn--sm btn--ghost" id="btnAddHeader">+ Add Header</button>
+                            </div>
+                            <div class="kv-editor__rows" id="headersRows">
+                                <div class="kv-row" data-row-id="h0">
+                                    <input type="checkbox" class="kv-row__toggle" checked>
+                                    <input type="text" class="kv-row__key" placeholder="Header name" spellcheck="false">
+                                    <input type="text" class="kv-row__value" placeholder="Header value"
+                                        spellcheck="false">
+                                    <button class="kv-row__delete" title="Remove">&times;</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Body Config -->
+                    <div class="config-panel" id="configBody">
+                        <div class="body-editor">
+                            <div class="body-editor__controls">
+                                <label class="body-type">
+                                    <input type="radio" name="bodyType" value="none" checked> None
+                                </label>
+                                <label class="body-type">
+                                    <input type="radio" name="bodyType" value="json"> JSON
+                                </label>
+                                <label class="body-type">
+                                    <input type="radio" name="bodyType" value="text"> Text
+                                </label>
+                                <label class="body-type">
+                                    <input type="radio" name="bodyType" value="formdata"> Form Data
+                                </label>
+                                <label class="body-type">
+                                    <input type="radio" name="bodyType" value="urlencoded"> x-www-form-urlencoded
+                                </label>
+                            </div>
+                            <div class="body-editor__content" id="bodyContent">
+                                <div class="body-none-message">This request does not have a body</div>
+                                <textarea class="body-editor__textarea hidden" id="bodyTextarea"
+                                    placeholder='{\n  "key": "value"\n}' spellcheck="false"></textarea>
+                                <div class="kv-editor hidden" id="formDataEditor">
+                                    <div class="kv-editor__rows" id="formDataRows"></div>
+                                    <button class="btn btn--sm btn--ghost" id="btnAddFormData">+ Add Field</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Auth Config -->
+                    <div class="config-panel" id="configAuth">
+                        <div class="auth-editor">
+                            <div class="auth-editor__type">
+                                <label>Auth Type:</label>
+                                <select id="authType" class="auth-editor__select">
+                                    <option value="none">No Auth</option>
+                                    <option value="bearer">Bearer Token</option>
+                                    <option value="basic">Basic Auth</option>
+                                    <option value="apikey">API Key</option>
+                                </select>
+                            </div>
+                            <div class="auth-editor__fields" id="authFields">
+                                <div class="auth-none-message">This request does not use any authorization.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chain Config -->
+                    <div class="config-panel" id="configChain">
+                        <div class="chain-editor">
+                            <div class="chain-editor__header">
+                                <span>Response Variable Extraction</span>
+                                <button class="btn btn--sm btn--ghost" id="btnAddChainRule">+ Add Rule</button>
+                            </div>
+                            <p class="chain-editor__desc">Extract values from the response and store as variables for
+                                use in subsequent requests.</p>
+                            <div class="chain-editor__rules" id="chainRules">
+                                <div class="empty-state empty-state--sm">
+                                    <p>No extraction rules defined</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== SPLIT HANDLE ===== -->
+                <div class="split-pane__handle" id="splitHandle">
+                    <div class="split-pane__handle-grip"></div>
+                </div>
+
+                <!-- ===== RESPONSE PANEL ===== -->
+                <div class="panel panel--response">
+                    <!-- Response status bar -->
+                    <div class="response-status" id="responseStatus">
+                        <div class="response-status__info">
+                            <span class="status-badge" id="statusBadge">---</span>
+                            <span class="response-meta" id="responseTime">0 ms</span>
+                            <span class="response-meta" id="responseSize">0 B</span>
+                        </div>
+                        <div class="response-status__actions">
+                            <button class="btn btn--icon btn--sm" id="btnCodeGen" title="Generate Code">
+                                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                                    <path d="M4 4L1 7l3 3M10 4l3 3-3 3M8 2L6 12" stroke="currentColor"
+                                        stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </button>
+                            <button class="btn btn--icon btn--sm" id="btnCopyResponse" title="Copy Response">
+                                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                                    <rect x="4" y="4" width="8" height="8" rx="1.5" stroke="currentColor"
+                                        stroke-width="1.2" />
+                                    <path d="M10 4V3a1.5 1.5 0 00-1.5-1.5h-5A1.5 1.5 0 002 3v5A1.5 1.5 0 003.5 9.5H4"
+                                        stroke="currentColor" stroke-width="1.2" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Response Tabs -->
+                    <div class="config-tabs config-tabs--response">
+                        <button class="config-tab active" data-response="pretty">Pretty</button>
+                        <button class="config-tab" data-response="raw">Raw</button>
+                        <button class="config-tab" data-response="headers">Headers</button>
+                    </div>
+
+                    <!-- Response Content -->
+                    <div class="response-content" id="responseContent">
+                        <div class="response-view active" id="viewPretty">
+                            <div class="empty-state">
+                                <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+                                    <circle cx="32" cy="32" r="24" stroke="currentColor" stroke-width="1.5"
+                                        opacity="0.3" />
+                                    <path d="M24 28l8-4 8 4v8l-8 4-8-4v-8z" stroke="currentColor" stroke-width="1.5"
+                                        opacity="0.5" />
+                                    <path d="M32 24v12" stroke="currentColor" stroke-width="1" opacity="0.3" />
+                                </svg>
+                                <p>Enter a URL and hit Send</p>
+                                <span class="empty-state__sub">Response will appear here</span>
+                            </div>
+                        </div>
+                        <div class="response-view" id="viewRaw">
+                            <pre class="response-raw" id="rawBody"></pre>
+                        </div>
+                        <div class="response-view" id="viewHeaders">
+                            <div class="response-headers-table" id="responseHeadersTable"></div>
+                        </div>
+                    </div>
+
+                    <!-- Loading overlay -->
+                    <div class="response-loading hidden" id="responseLoading">
+                        <div class="spinner"></div>
+                        <span>Sending request...</span>
+                    </div>
+                </div>
+
+            </div> <!-- /split-pane -->
+        </main>
+    </div> <!-- /app-layout -->
+
+    <!-- ===== MODALS ===== -->
+
+    <!-- Save Request Modal -->
+    <div class="modal-overlay hidden" id="modalSaveRequest">
+        <div class="modal">
+            <div class="modal__header">
+                <h3>Save Request</h3>
+                <button class="modal__close">&times;</button>
+            </div>
+            <div class="modal__body">
+                <div class="form-group">
+                    <label for="saveRequestName">Request Name</label>
+                    <input type="text" id="saveRequestName" class="form-input" placeholder="e.g., Get All Users">
+                </div>
+                <div class="form-group">
+                    <label for="saveRequestCollection">Collection</label>
+                    <select id="saveRequestCollection" class="form-input">
+                        <option value="">— Select Collection —</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal__footer">
+                <button class="btn btn--ghost modal__cancel">Cancel</button>
+                <button class="btn btn--primary" id="btnConfirmSave">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Collection Modal -->
+    <div class="modal-overlay hidden" id="modalNewCollection">
+        <div class="modal">
+            <div class="modal__header">
+                <h3>New Collection</h3>
+                <button class="modal__close">&times;</button>
+            </div>
+            <div class="modal__body">
+                <div class="form-group">
+                    <label for="newCollectionName">Collection Name</label>
+                    <input type="text" id="newCollectionName" class="form-input" placeholder="e.g., My API">
+                </div>
+            </div>
+            <div class="modal__footer">
+                <button class="btn btn--ghost modal__cancel">Cancel</button>
+                <button class="btn btn--primary" id="btnConfirmNewCollection">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Environment Manager Modal -->
+    <div class="modal-overlay hidden" id="modalEnvManager">
+        <div class="modal modal--lg">
+            <div class="modal__header">
+                <h3>Manage Environments</h3>
+                <button class="modal__close">&times;</button>
+            </div>
+            <div class="modal__body">
+                <div class="env-manager">
+                    <div class="env-manager__sidebar">
+                        <div class="env-manager__list" id="envList"></div>
+                        <button class="btn btn--sm btn--primary btn--block" id="btnNewEnv">+ New Environment</button>
+                    </div>
+                    <div class="env-manager__editor" id="envEditor">
+                        <div class="empty-state">
+                            <p>Select an environment to edit</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal__footer">
+                <button class="btn btn--ghost modal__cancel">Close</button>
+                <button class="btn btn--primary" id="btnSaveEnvs">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Code Generation Modal -->
+    <div class="modal-overlay hidden" id="modalCodeGen">
+        <div class="modal modal--lg">
+            <div class="modal__header">
+                <h3>Generate Code</h3>
+                <button class="modal__close">&times;</button>
+            </div>
+            <div class="modal__body">
+                <div class="codegen">
+                    <div class="codegen__tabs">
+                        <button class="codegen__tab active" data-lang="curl">cURL</button>
+                        <button class="codegen__tab" data-lang="fetch">JavaScript (fetch)</button>
+                        <button class="codegen__tab" data-lang="axios">JavaScript (axios)</button>
+                        <button class="codegen__tab" data-lang="python">Python (requests)</button>
+                    </div>
+                    <div class="codegen__output">
+                        <pre><code class="codegen__code" id="codegenOutput"></code></pre>
+                        <button class="btn btn--sm btn--primary codegen__copy" id="btnCopyCode">
+                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                                <rect x="4" y="4" width="8" height="8" rx="1.5" stroke="currentColor"
+                                    stroke-width="1.2" />
+                                <path d="M10 4V3a1.5 1.5 0 00-1.5-1.5h-5A1.5 1.5 0 002 3v5A1.5 1.5 0 003.5 9.5H4"
+                                    stroke="currentColor" stroke-width="1.2" />
+                            </svg>
+                            Copy
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Modal -->
+    <div class="modal-overlay hidden" id="modalImport">
+        <div class="modal">
+            <div class="modal__header">
+                <h3>Import Collection</h3>
+                <button class="modal__close">&times;</button>
+            </div>
+            <div class="modal__body">
+                <div class="import-area" id="importArea">
+                    <div class="import-dropzone" id="importDropzone">
+                        <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+                            <path d="M20 6v20M12 18l8 8 8-8" stroke="currentColor" stroke-width="1.5"
+                                stroke-linecap="round" />
+                            <path d="M6 28v4a2 2 0 002 2h24a2 2 0 002-2v-4" stroke="currentColor" stroke-width="1.5"
+                                stroke-linecap="round" />
+                        </svg>
+                        <p>Drag &amp; drop a JSON file here</p>
+                        <span class="empty-state__sub">or click to browse</span>
+                        <input type="file" id="importFileInput" accept=".json" class="hidden">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+
+    <script src="js/request.js"></script>
+    <script src="js/response.js"></script>
+    <script src="js/headers.js"></script>
+    <script src="js/collections.js"></script>
+    <script src="js/environments.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/history.js"></script>
+    <script src="js/chaining.js"></script>
+    <script src="js/codegen.js"></script>
+    <script src="js/importexport.js"></script>
+    <script src="js/app.js"></script>
+</body>
+
+</html>
